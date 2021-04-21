@@ -3,6 +3,17 @@ name = "kamajii"
 version = "0.0.0"
 authors = ["♪ hiljusti 🎮 <hiljusti@pm.me>"]
 edition = "2018"
+license = "GPL-3.0-or-later"
+description = "A simple stack database."
+readme = "README.md"
+homepage = "https://github.com/hiljusti/kamajii"
+repository = "https://github.com/hiljusti/kamajii"
+documentation = "https://docs.rs/kamajii"
+keywords = ["stack"]
+categories = ["database-implementations"]
+
+[badges]
+maintenance = { status = "experimental" }
 
 [dependencies]
 
