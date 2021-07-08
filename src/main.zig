@@ -5,17 +5,19 @@ const fs = std.fs;
 const bufSize = 128;
 
 pub fn main() !void {
-    try stdout.writeAll("Enter your name: ");
-
     // We need a buffer that can stay in scope longer than the result of getLine
     var buffer: [bufSize]u8 = undefined;
-    const line = getLine(&buffer);
 
-    try stdout.writer().print("Greetings {s}.\n", .{line});
+    try stdout.writeAll("Enter your name: ");
+    var line = try getLine(&buffer);
 
-    //try writeFile("temp1.txt", "testing");
-    //try writeFile("temp2.txt", "testing\n");
-    //try writeFile("temp3.txt", "testing\n\n");
+    while (!isQuitWord(line)) {
+        try stdout.writer().print("Greetings {s}.\n", .{line});
+        try stdout.writeAll("Enter your name: ");
+        line = try getLine(&buffer);
+    }
+
+    try stdout.writer().print("Bye bye now.\n", .{line});
 }
 
 fn writeFile(filename: []const u8, contents: []const u8) anyerror!void {
@@ -34,4 +36,12 @@ fn getLine(buffer: []u8) ![]const u8 {
         '\n',
     );
     return line orelse "";
+}
+
+fn isQuitWord(word: []const u8) bool {
+    return inline for (.{ "q", "quit", "exit" }) |quit| {
+        if (std.mem.eql(u8, word, quit)) {
+            break true;
+        }
+    } else false;
 }
