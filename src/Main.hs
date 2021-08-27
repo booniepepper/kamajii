@@ -1,13 +1,10 @@
 module Main where
 
-import System.EasyFile (getAppUserDataDirectory, createDirectoryIfMissing)
-
-appDir = getAppUserDataDirectory "kamajii"
-makeDir = createDirectoryIfMissing True
+import Files
 
 main :: IO ()
-main = do
-  home <- appDir
-  putStrLn ("home: " ++ home)
+main =
+  appDir >>= \home ->
+  putStrLn ("home: " ++ home) >>
   makeDir home
 
