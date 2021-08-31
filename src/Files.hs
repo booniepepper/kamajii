@@ -1,4 +1,4 @@
-module Files (appDir, makeDir) where
+module Files (appDir, makeAppDir) where
 
 import System.EasyFile
 
@@ -7,3 +7,6 @@ appDir = getAppUserDataDirectory "kamajii"
 
 makeDir :: FilePath -> IO ()
 makeDir = createDirectoryIfMissing True
+
+makeAppDir :: IO ()
+makeAppDir = appDir >>= makeDir
