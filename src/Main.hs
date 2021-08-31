@@ -3,8 +3,7 @@ module Main where
 import Files
 
 main :: IO ()
-main =
-  appDir >>= \home ->
-  putStrLn ("home: " ++ home) >>
+main = do
+  home <- appDir
+  putStrLn $ "home: " ++ home
   makeDir home
-
