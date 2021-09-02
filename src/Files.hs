@@ -1,4 +1,4 @@
-module Files (appDir, makeAppDir) where
+module Files (appDir, joinPath, makeAppDir, makeDir) where
 
 import System.EasyFile
 

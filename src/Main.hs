@@ -6,4 +6,7 @@ main :: IO ()
 main = do
   makeAppDir
   home <- appDir
-  putStrLn $ "home: " ++ home
+  let next = joinPath [home, "next"]
+  makeDir next
+  putStrLn $ "home:  " ++ home
+  putStrLn $ "next: " ++ next
