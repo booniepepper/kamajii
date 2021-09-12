@@ -1,6 +1,7 @@
-module Files (getAppDir, getCustomStackDir, getStackDir) where
+module Files (getAppDir, getCustomStackDir, getStackDir, writeItem) where
 
 import System.EasyFile
+import System.IO
 
 getAppDir :: IO FilePath
 getAppDir = getAppUserDataDirectory "kamajii"
@@ -18,3 +19,9 @@ getCustomStackDir path stack = do
 
 makeDir :: FilePath -> IO ()
 makeDir = createDirectoryIfMissing True
+
+writeItem :: FilePath -> String -> IO ()
+writeItem path contents = do
+    let file = joinPath [path, "item"]
+    handle <- openFile file WriteMode
+    hPutStrLn handle contents
