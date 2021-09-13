@@ -9,6 +9,4 @@ main = do
   stackDir <- getStackDir stackName
   putStrLn "Enter some content:"
   content <- getLine
-  writeFile (stackDir ++ "/item") (content ++ "\n")
-  written <- readFile (stackDir ++ "/item")
-  putStrLn $ "Wrote the following: [" ++ written ++ "]"
+  pushItem stackDir content
