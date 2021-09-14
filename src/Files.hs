@@ -1,4 +1,4 @@
-module Files (getAppDir, getCustomStackDir, getStackDir, pushItem) where
+module Files (getAppDir, getCustomStackDir, getStackDir, pushItem, popItem) where
 
 import Control.Monad
 import System.EasyFile
@@ -38,4 +38,30 @@ pushItem path contents = do
         makeDir nextDir
         renameFile item nextItem
     writeFile item contents
-    
+
+popItem :: FilePath -> IO (Maybe String)
+popItem path = do
+    let item = joinPath [path, "item"]
+    itemExists <- doesFileExist item
+    contents <- case itemExists of
+        True -> do
+            contents <- readFile item
+            removeFile item
+            return (Just contents)
+        False -> return Nothing
+    let nextItem = joinPath [path, "next", "item"]
+    nextItemExists <- doesFileExist nextItem
+    when nextItemExists $ do
+        renameFile nextItem item
+    let nextDir = joinPath [path, "next"]
+    let nextNextDir = joinPath [path, "next", "next"]
+    nextNextDirExists <- doesDirectoryExist nextNextDir
+    when nextNextDirExists $ do
+        let tempNextDir = joinPath [path, "next-temp"]
+        renameDirectory nextNextDir tempNextDir
+        removeDirectory nextDir
+        renameDirectory tempNextDir nextDir
+    nextItemStillExists <- doesFileExist nextItem
+    unless nextItemStillExists $ do
+        removeDirectory nextDir
+    return contents
