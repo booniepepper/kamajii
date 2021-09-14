@@ -4,6 +4,8 @@ import Control.Monad
 import System.EasyFile
 import System.IO
 
+-- File/Directory manipulation
+
 getAppDir :: IO FilePath
 getAppDir = getAppUserDataDirectory "kamajii"
 
@@ -21,27 +23,56 @@ getCustomStackDir path stack = do
 makeDir :: FilePath -> IO ()
 makeDir = createDirectoryIfMissing True
 
+-- Stacky stuff
+
+pathAppend :: FilePath -> String -> FilePath
+pathAppend b a = joinPath [a, b]
+
+itemOf :: FilePath -> FilePath
+itemOf = pathAppend "item"
+
+nextOf :: FilePath -> FilePath
+nextOf = pathAppend "next"
+
+tempOf :: FilePath -> FilePath
+tempOf = pathAppend "temp"
+
+nextItemOf :: FilePath -> FilePath
+nextItemOf = itemOf . nextOf
+
+nextNextOf :: FilePath -> FilePath
+nextNextOf = nextOf . nextOf
+
+whenM :: Monad m => m Bool -> m () -> m ()
+whenM test action = do
+    result <- test
+    when result action
+
+whenDirExists :: FilePath -> IO () -> IO ()
+whenDirExists path = whenM (doesDirectoryExist path)
+
+whenFileExists :: FilePath -> IO () -> IO ()
+whenFileExists path = whenM (doesFileExist path)
+
 pushItem :: FilePath -> String -> IO ()
 pushItem path contents = do
-    let nextDir = joinPath [path, "next"]
-    nextDirExists <- doesDirectoryExist nextDir
-    when nextDirExists $ do
-        let tempNext = joinPath [path, "temp-next"]
-        let tempNextNext = joinPath [path, "temp-next", "next"]
+    let nextDir = nextOf path
+    whenDirExists nextDir $ do
+        let tempNext = tempOf path
+        let tempNextNext = nextOf . tempOf $ path
         makeDir tempNext
         renameDirectory nextDir tempNextNext
         renameDirectory tempNext nextDir
-    let item = joinPath [path, "item"]
-    itemExists <- doesFileExist item
-    when itemExists $ do
-        let nextItem = joinPath [path, "next", "item"]
+    let item = itemOf path
+    whenFileExists item $ do
+        let nextItem = nextItemOf path
         makeDir nextDir
         renameFile item nextItem
     writeFile item contents
 
 popItem :: FilePath -> IO (Maybe String)
 popItem path = do
-    let item = joinPath [path, "item"]
+    let item = itemOf path
     itemExists <- doesFileExist item
     contents <- case itemExists of
         True -> do
@@ -49,19 +80,18 @@ popItem path = do
             removeFile item
             return (Just contents)
         False -> return Nothing
-    let nextItem = joinPath [path, "next", "item"]
-    nextItemExists <- doesFileExist nextItem
-    when nextItemExists $ do
+    let nextItem = nextItemOf path
+    whenFileExists nextItem $ do
         renameFile nextItem item
-    let nextDir = joinPath [path, "next"]
-    let nextNextDir = joinPath [path, "next", "next"]
-    nextNextDirExists <- doesDirectoryExist nextNextDir
-    when nextNextDirExists $ do
-        let tempNextDir = joinPath [path, "next-temp"]
+    let nextDir = nextOf path
+    let nextNextDir = nextNextOf path
+    whenDirExists nextNextDir $ do
+        let tempNextDir = tempOf path
         renameDirectory nextNextDir tempNextDir
         removeDirectory nextDir
         renameDirectory tempNextDir nextDir
+    nextDirExists <- doesDirectoryExist nextDir
     nextItemStillExists <- doesFileExist nextItem
-    unless nextItemStillExists $ do
+    when (nextDirExists && not nextItemStillExists) $ do
         removeDirectory nextDir
     return contents
