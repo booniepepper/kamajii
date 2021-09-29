@@ -74,12 +74,10 @@ popItem :: FilePath -> IO (Maybe String)
 popItem path = do
     let item = itemOf path
     itemExists <- doesFileExist item
-    contents <- case itemExists of
-        True -> do
-            contents <- readFile item
-            removeFile item
-            return (Just contents)
-        False -> return Nothing
+    contents <- if itemExists then (do
+                    contents <- readFile item
+                    removeFile item
+                    return (Just contents)) else return Nothing
     let nextItem = nextItemOf path
     whenFileExists nextItem $ do
         renameFile nextItem item
