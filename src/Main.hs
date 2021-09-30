@@ -9,8 +9,8 @@ programName = "kamajii 0.1"
 
 programUsage :: String
 programUsage =
-  "Usage: kamajii stack STACK push CONTENTS..." ++
-  "       kamajii stack STACK pop"
+  "Usage: kamajii STACK push CONTENTS..." ++
+  "       kamajii STACK pop"
 
 main :: IO ()
 main = do
@@ -33,7 +33,7 @@ type Commands = [String]
 type StackDir = String
 
 handle :: Commands -> IO ()
-handle ("stack":stack:cmd) = getStackDir stack >>= \dir -> stackAction dir cmd
+handle (stack:cmd) = getStackDir stack >>= \dir -> stackAction dir cmd
 handle _ = putStrLn programUsage
 
 stackAction :: StackDir -> Commands -> IO ()
