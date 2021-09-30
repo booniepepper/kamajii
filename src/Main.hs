@@ -1,27 +1,45 @@
 module Main where
 
-import Control.Monad
-import Data.Char
-import Files
+import Control.Monad ( forM_ )
+import Files ( getStackDir, pushItem, popItem )
+import System.IO (isEOF)
+
+programName :: String
+programName = "kamajii 0.1"
+
+programUsage :: String
+programUsage =
+  "Usage: kamajii stack STACK push CONTENTS..." ++
+  "       kamajii stack STACK pop"
 
 main :: IO ()
 main = do
-  stackName <- promptLn "Enter a stack name:"
-  stackDir <- getStackDir stackName
+  putStrLn programName
+  putStrLn $ take (length programName) (cycle "~")
+  loop
 
-  action <- promptLn "Push or pop?"
+loop :: IO ()
+loop = do
+  end <- isEOF
+  if end then
+    return ()
+  else do
+    line <- getLine
+    let command = words line
+    handle command
+    loop
 
-  when (map toLower action == "push") $ do
-    putStrLn "Enter some content:"
-    contents <- getLine
-    pushItem stackDir contents
+type Commands = [String]
+type StackDir = String
 
-  when (map toLower action == "pop") $ do
-    contents <- popItem stackDir
-    forM_ contents putStrLn
+handle :: Commands -> IO ()
+handle ("stack":stack:cmd) = getStackDir stack >>= \dir -> stackAction dir cmd
+handle _ = putStrLn programUsage
 
-prompt :: String -> IO String
-prompt s = putStr s >> getLine
-
-promptLn :: String -> IO String
-promptLn s = putStrLn s >> getLine
+stackAction :: StackDir -> Commands -> IO ()
+stackAction stackDir ("push":contents) = pushItem stackDir (unwords contents)
+stackAction stackDir ["pop"] = popItem stackDir >>= \contents -> forM_ contents putStrLn
+-- TODO: Read actions.      peek, head <n>, list, tail, length, isempty
+-- TODO: Lifecycle actions. complete[-all] delete[-all]
+-- TODO: Shuffle actions.   swap, rot, next (move first to last)
+stackAction _ _ = putStrLn programUsage
