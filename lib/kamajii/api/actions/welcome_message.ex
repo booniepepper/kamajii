@@ -12,12 +12,12 @@ defmodule Kamajii.API.Actions.WelcomeMessage do
 
   def handle_request(request = %{method: :POST}, _state) do
     case Jason.decode(request.body) do
-      {:ok, %{"name" => name}} ->
-        message = Kamajii.welcome_message(name)
-        data = %{message: message}
+      {:ok, %{"push" => _contents}} ->
+        #message = Kamajii.welcome_message(contents)
+        #data = %{message: message}
 
         response(:ok)
-        |> API.set_json_payload(%{data: data})
+        #|> API.set_json_payload(%{data: data})
 
       {:ok, _} ->
         error = %{title: "Missing required data parameter 'name'"}
