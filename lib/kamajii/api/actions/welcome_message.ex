@@ -16,7 +16,7 @@ defmodule Kamajii.API.Actions.WelcomeMessage do
         #message = Kamajii.welcome_message(contents)
         #data = %{message: message}
 
-        response(:ok)
+        response(:created)
         #|> API.set_json_payload(%{data: data})
 
       {:ok, _} ->

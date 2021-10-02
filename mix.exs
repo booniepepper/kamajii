@@ -23,7 +23,7 @@ defmodule Kamajii.Mixfile do
 
   defp deps do
     [
-      {:ace, "~> 0.18.6"},
+      {:ace, "~> 0.19.0"},
       {:raxx_logger, "~> 0.2.2"},
       {:jason, "~> 1.0"}
     ]
