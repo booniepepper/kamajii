@@ -1,0 +1,13 @@
+name: kamajii
+version: 0.1.0
+
+authors:
+  - ♪ hiljusti 🎮 <hiljusti@pm.me>
+
+targets:
+  kamajii:
+    main: src/kamajii.cr
+
+crystal: 1.0.0
+
+license: MIT
