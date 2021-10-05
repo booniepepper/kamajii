@@ -8,6 +8,10 @@ targets:
   kamajii:
     main: src/kamajii.cr
 
+dependencies:
+  kemal:
+    github: kemalcr/kemal
+
 crystal: 1.0.0
 
 license: MIT
