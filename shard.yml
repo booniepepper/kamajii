@@ -6,7 +6,7 @@ authors:
 
 targets:
   kamajii:
-    main: src/kamajii.cr
+    main: src/run_server.cr
 
 dependencies:
   kemal:
