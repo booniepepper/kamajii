@@ -49,7 +49,7 @@ module Kamajii
     content
   end
 
-  def stackdir(stack : Path | String) : String
+  private def stackdir(stack : Path | String) : String
     home = Path.home
     path = File.join(home, ".kamajii", stack)
     Dir.mkdir_p(path)
