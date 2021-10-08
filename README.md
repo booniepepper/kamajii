@@ -1,6 +1,10 @@
 # kamajii
 
-TODO: Write a description here
+Runs a stack-based database.
+
+Env variables:
+
+- `KAMAJII_HOME` - defines the "home" directory where everything should be saved.
 
 ## Installation
 

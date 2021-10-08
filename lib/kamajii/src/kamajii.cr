@@ -50,7 +50,7 @@ module Kamajii
   end
 
   private def stackdir(stack : Path | String) : String
-    home = Path.home
+    home = ENV["KAMAJII_HOME"] || Path.home
     path = File.join(home, ".kamajii", stack)
     Dir.mkdir_p(path)
     path
