@@ -3,6 +3,14 @@
 require "kemal"
 require "kamajii"
 
+def errorable(&block)
+  begin
+    yield
+  rescue ex
+    puts ex.inspect
+  end
+end
+
 get "/" do |env|
   content = env.request.body
 
@@ -16,23 +24,29 @@ post "/push/:stack" do |env|
   stack = env.params.url["stack"]
   content = env.request.body
 
-  item = content ? content.gets_to_end : ""
+  env.response.status = HTTP::Status::INTERNAL_SERVER_ERROR
+  errorable do
+    item = content ? content.gets_to_end : ""
 
-  Kamajii.push stack, item
+    Kamajii.push stack, item
 
-  env.response.content_type = "text/plain"
-  env.response.status = HTTP::Status::CREATED
-  "created"
+    env.response.content_type = "text/plain"
+    env.response.status = HTTP::Status::CREATED
+    "created"
+  end
 end
 
 get "/pop/:stack" do |env|
   stack = env.params.url["stack"]
 
-  content = Kamajii.pop stack
+  env.response.status = HTTP::Status::INTERNAL_SERVER_ERROR
+  errorable do
+    content = Kamajii.pop stack
 
-  env.response.content_type = "text/plain"
-  env.response.status = HTTP::Status::CREATED
-  content
+    env.response.content_type = "text/plain"
+    env.response.status = HTTP::Status::CREATED
+    content
+  end
 end
 
 error 404 do |env|
