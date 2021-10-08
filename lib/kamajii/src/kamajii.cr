@@ -4,6 +4,8 @@ require "file_utils"
 module Kamajii
   extend self
 
+  KAMAJII_HOME = ENV["KAMAJII_HOME"]? || Path.home
+
   def push(stack : Path | String, contents : String)
     dir = stackdir stack
     item = File.join dir, "item"
@@ -50,7 +52,7 @@ module Kamajii
   end
 
   private def stackdir(stack : Path | String) : String
-    home = ENV["KAMAJII_HOME"] || Path.home
+    home = KAMAJII_HOME
     path = File.join(home, ".kamajii", stack)
     Dir.mkdir_p(path)
     path
