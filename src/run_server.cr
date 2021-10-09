@@ -51,7 +51,11 @@ end
 
 # TODO: Remove when ready to move to some kind of "production" state
 post "/kill" do |env|
-  exit
+  spawn do
+    sleep Time::Span.new(seconds: 10)
+    exit
+  end
+  "Exiting in 10 seconds..."
 end
 
 error 404 do |env|
