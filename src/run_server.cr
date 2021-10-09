@@ -49,9 +49,17 @@ get "/pop/:stack" do |env|
   end
 end
 
+# TODO: Remove when ready to move to some kind of "production" state
+post "/kill" do |env|
+  exit
+end
+
 error 404 do |env|
   env.response.content_type = "application/json"
   {error: "USAGE: GET /"}.to_json
 end
 
-Kemal.run
+Kemal.run do |config|
+  server = config.server.not_nil!
+  server.bind_tcp "localhost", 3000
+end
