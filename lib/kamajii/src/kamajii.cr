@@ -53,7 +53,7 @@ module Kamajii
 
   private def stackdir(stack : Path | String) : String
     home = KAMAJII_HOME
-    path = File.join(home, ".kamajii", stack)
+    path = File.join(home, "kamajii", stack)
     Dir.mkdir_p(path)
     path
   end
