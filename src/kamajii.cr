@@ -51,6 +51,18 @@ module Kamajii
     content
   end
 
+  def peek(stack : Path | String) : String?
+    dir = stackdir stack
+    item = File.join dir, "item"
+
+    content = nil
+    if File.exists? item
+      content = File.read item
+    end
+
+    content
+  end
+
   private def stackdir(stack : Path | String) : String
     home = KAMAJII_HOME
     path = File.join(home, "kamajii", stack)

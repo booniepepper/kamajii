@@ -1,69 +1,48 @@
-# Kemal is a microservice framework. (Like Sinatra/Flask)
-# Docs: https://kemalcr.com
-require "kemal"
-require "kamajii"
+require "./kamajii"
+require "socket"
 
-def errorable(&block)
-  begin
-    yield
-  rescue ex
-    puts ex.inspect
+def respond_ok_to(io : IO)
+  io.puts "OK"
+end
+
+def respond_idk_to(io : IO, y_tho : String)
+  io.puts "ERROR #{y_tho}"
+end
+
+def handle_client(client : TCPSocket)
+  puts "Connection established with #{client.inspect}"
+  client.each_line do |message|
+    chars = message.chars
+    action = chars.take_while {|c| c != ' '}.join
+    stack = chars.skip(action.size + 1).take_while {|c| c != ' '}.join
+
+    if action.size == 0
+      respond_idk_to client, "no action"
+      next
+    elsif stack.size == 0
+      respond_idk_to client, "no stack"
+      next
+    end
+
+    case action
+    when "push"
+      start = action.size + stack.size + 2
+      Kamajii.push stack, message.size > start ? message[start...] : ""
+      respond_ok_to client
+    when "pop"
+      client.puts(Kamajii.pop stack)
+    when "peek"
+      client.puts(Kamajii.peek stack)
+    else
+      respond_idk_to client, "unknown action #{action}"
+      next
+    end
   end
+  puts "Connection terminated with #{client.inspect}"
 end
 
-get "/" do |env|
-  content = env.request.body
-
-  request = content ? content.gets_to_end : "{}"
-
-  env.response.content_type = "application/json"
-  {message: "greetings", request: request}.to_json
-end
-
-post "/push/:stack" do |env|
-  stack = env.params.url["stack"]
-  content = env.request.body
-
-  env.response.status = HTTP::Status::INTERNAL_SERVER_ERROR
-  errorable do
-    item = content ? content.gets_to_end : ""
-
-    Kamajii.push stack, item
-
-    env.response.content_type = "text/plain"
-    env.response.status = HTTP::Status::CREATED
-    "created"
-  end
-end
-
-get "/pop/:stack" do |env|
-  stack = env.params.url["stack"]
-
-  env.response.status = HTTP::Status::INTERNAL_SERVER_ERROR
-  errorable do
-    content = Kamajii.pop stack
-
-    env.response.content_type = "text/plain"
-    env.response.status = HTTP::Status::CREATED
-    content
-  end
-end
-
-# TODO: Remove when ready to move to some kind of "production" state
-post "/kill" do |env|
-  spawn do
-    sleep Time::Span.new(seconds: 10)
-    exit
-  end
-  "Exiting in 10 seconds..."
-end
-
-error 404 do |env|
-  env.response.content_type = "application/json"
-  {error: "USAGE: GET /"}.to_json
-end
-
-Kemal.run do |config|
-  server = config.server.not_nil!
-  server.bind_tcp "localhost", 3000
+server = TCPServer.new("localhost", 3000)
+puts "Listening on localhost:3000"
+while client = server.accept?
+  spawn handle_client(client)
 end
