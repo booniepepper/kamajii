@@ -41,8 +41,12 @@ def handle_client(client : TCPSocket)
   puts "Connection terminated with #{client.inspect}"
 end
 
-server = TCPServer.new("localhost", 3000)
-puts "Listening on localhost:3000"
-while client = server.accept?
-  spawn handle_client(client)
+def run_server(host = "0.0.0.0", port = 2001)
+  server = TCPServer.new(host, port)
+  puts "Listening on #{host}:#{port}"
+  while client = server.accept?
+    spawn handle_client(client)
+  end
 end
+
+run_server
