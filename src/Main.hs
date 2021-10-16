@@ -19,41 +19,45 @@ programUsage =
   "       kamajii STACK pop"
 
 main :: IO ()
-main = serve (Host "localhost") "3000" mainSession
+main = serve (Host "localhost") "3000" handleClient
 
-mainSession :: (Socket, SockAddr) -> IO ()
-mainSession (socket, remoteAddr) = do
+handleClient :: (Socket, SockAddr) -> IO ()
+handleClient (socket, remoteAddr) = do
   putStrLn $ "TCP connection established from " ++ show remoteAddr
   sendLn socket programName
-  loop socket
+  clientLoop socket
   putStrLn $ "TCP connection terminated from " ++ show remoteAddr
 
-loop :: Socket -> IO ()
-loop socket = do
-  maybe_input <- recv socket 2048
-  case maybe_input of
-    Nothing -> return ()
-    Just bytes -> do
-      let input = words . unpack $ bytes
-      if input `elem` [["exit"], ["q"], ["quit"]]
-      then return ()
-      else do
-        maybe_output <- handle input
-        case maybe_output of
-          Nothing -> return ()
-          Just chars -> sendLn socket (pack chars)
-        loop socket
+clientLoop :: Socket -> IO ()
+clientLoop socket = do
+  maybe_bytes <- recv socket 2048
+  with maybe_bytes $ \bytes -> do
+    let line = unpack bytes
+    putStrLn $ "Received command: " ++ line
+    let input = words line
+    unless (input `elem` [["exit"], ["q"], ["quit"]]) $ do
+      maybe_chars <- handleCmd input
+      with maybe_chars $ sendLn socket . pack
+      clientLoop socket
+  where
+    with :: Maybe a -> (a -> IO ()) -> IO ()
+    with Nothing _ = return ()
+    with (Just a) io = io a
+
+    unless :: Bool -> IO () -> IO ()
+    unless True _ = return ()
+    unless False io = io
 
 type Commands = [String]
 type StackDir = String
 
-handle :: Commands -> IO (Maybe String)
-handle (stack:cmd) = getStackDir stack >>= \dir -> stackAction dir cmd
-handle _ = return (Just programUsage)
+handleCmd :: Commands -> IO (Maybe String)
+handleCmd (stack:cmd) = getStackDir stack >>= stackAction cmd
+handleCmd _ = return (Just programUsage)
 
-stackAction :: StackDir -> Commands -> IO (Maybe String)
-stackAction stackDir ("push":contents) = pushItem stackDir (unwords contents) >> return Nothing
-stackAction stackDir ["pop"] = popItem stackDir
+stackAction :: Commands -> StackDir -> IO (Maybe String)
+stackAction ("push":contents) stackDir = pushItem stackDir (unwords contents) >> return Nothing
+stackAction ["pop"] stackDir = popItem stackDir
 -- TODO: Read actions.      peek, head <n>, list, tail, length, isempty
 -- TODO: Lifecycle actions. complete[-all] delete[-all]
 -- TODO: Shuffle actions.   swap, rot, next (move first to last)
