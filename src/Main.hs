@@ -1,6 +1,6 @@
 module Main where
 
-import Server (serverMain)
+import Kamajii.TcpServer (serverMain)
 
 main :: IO ()
 main = serverMain

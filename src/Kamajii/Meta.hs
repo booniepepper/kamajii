@@ -1,4 +1,4 @@
-module Meta (programName, programUsage) where
+module Kamajii.Meta (programName, programUsage) where
 
 programName :: String
 programName = "kamajii 0.1"

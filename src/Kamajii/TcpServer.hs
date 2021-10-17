@@ -1,11 +1,11 @@
-module Server (serverMain) where
+module Kamajii.TcpServer (serverMain) where
 
 import Control.Monad (forM_)
 import Control.Monad.IO.Class (MonadIO)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as B
 import Data.ByteString.Char8 (pack, snoc, unpack)
-import qualified Meta
+import qualified Kamajii.Meta as Meta
 import Network.Simple.TCP
   ( HostPreference (Host),
     SockAddr,
@@ -14,7 +14,7 @@ import Network.Simple.TCP
     send,
     serve,
   )
-import Stack (processStackCommand)
+import Kamajii.Stack (processStackCommand)
 import System.IO (isEOF)
 
 programName :: ByteString

@@ -1,17 +1,17 @@
-module Stack (processStackCommand) where
+module Kamajii.Stack (processStackCommand) where
 
 import Control.Monad (when)
-import Files (getStackDir, makeDir)
-import Meta (programUsage)
+import Kamajii.Meta (programUsage)
 import System.EasyFile
-  ( doesDirectoryExist,
-    doesFileExist,
-    joinPath,
-    removeDirectory,
-    removeFile,
-    renameDirectory,
-    renameFile,
-  )
+    ( createDirectoryIfMissing,
+      doesDirectoryExist,
+      doesFileExist,
+      removeDirectory,
+      removeFile,
+      renameDirectory,
+      renameFile,
+      getAppUserDataDirectory,
+      joinPath )
 
 type Commands = [String]
 
@@ -76,9 +76,6 @@ popItem path = do
 
 -- Stacky stuff
 
-pathAppend :: FilePath -> String -> FilePath
-pathAppend b a = joinPath [a, b]
-
 itemOf :: FilePath -> FilePath
 itemOf = pathAppend "item"
 
@@ -104,3 +101,25 @@ whenDirExists path = whenM (doesDirectoryExist path)
 
 whenFileExists :: FilePath -> IO () -> IO ()
 whenFileExists path = whenM (doesFileExist path)
+
+-- File/Directory manipulation
+
+getAppDir :: IO FilePath
+getAppDir = getAppUserDataDirectory "kamajii"
+
+getStackDir :: String -> IO FilePath
+getStackDir stackName = do
+  app <- getAppDir
+  getCustomStackDir app stackName
+
+getCustomStackDir :: FilePath -> String -> IO FilePath
+getCustomStackDir path stack = do
+  let stackPath = joinPath [path, stack]
+  makeDir stackPath
+  return stackPath
+
+makeDir :: FilePath -> IO ()
+makeDir = createDirectoryIfMissing True
+
+pathAppend :: FilePath -> String -> FilePath
+pathAppend b a = joinPath [a, b]
