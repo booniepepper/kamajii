@@ -1,8 +1,7 @@
 module Files (getAppDir, getCustomStackDir, getStackDir, pushItem, popItem) where
 
-import Control.Monad
+import Control.Monad ( when )
 import System.EasyFile
-import System.IO
 
 -- File/Directory manipulation
 
