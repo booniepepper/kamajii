@@ -3,7 +3,7 @@ version:             0.1.0.0
 -- synopsis:
 -- description:
 homepage:            https://github.com/hiljusti/kamajii#readme
-license:             BSD3
+license:             AGPL-3.0-or-later
 license-file:        LICENSE
 author:              J.R. Hill
 maintainer:          hiljusti@pm.me
