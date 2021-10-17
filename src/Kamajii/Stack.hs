@@ -19,17 +19,18 @@ type StackDir = String
 
 processStackCommand :: Commands -> IO (Maybe String)
 processStackCommand (stack : cmd) = getStackDir stack >>= stackAction cmd
-processStackCommand _ = return (Just programUsage)
+processStackCommand _ = return $ Just programUsage
 
 stackAction :: Commands -> StackDir -> IO (Maybe String)
 stackAction ("push" : contents) stackDir = pushItem stackDir (unwords contents) >> return Nothing
 stackAction ["pop"] stackDir = popItem stackDir
--- TODO: Read actions.      peek, head <n>, list, tail, length, isempty
+stackAction ["peek"] stackDir = peekItem stackDir
+-- TODO: Read actions.      head <n>, list, tail, length, isempty
 -- TODO: Lifecycle actions. complete[-all] delete[-all]
 -- TODO: Shuffle actions.   swap, rot, next (move first to last)
 stackAction _ _ = return (Just programUsage)
 
-pushItem :: FilePath -> String -> IO ()
+pushItem :: StackDir -> String -> IO ()
 pushItem path contents = do
   let nextDir = nextOf path
   whenDirExists nextDir $ do
@@ -45,19 +46,24 @@ pushItem path contents = do
     renameFile item nextItem
   writeFile item contents
 
-popItem :: FilePath -> IO (Maybe String)
-popItem path = do
+peekItem :: StackDir -> IO (Maybe String)
+peekItem path = do
   let item = itemOf path
   itemExists <- doesFileExist item
-  contents <-
-    if itemExists
-      then
-        ( do
-            contents <- readFile item
-            removeFile item
-            return (Just contents)
-        )
-      else return Nothing
+  if itemExists
+    then
+      ( do
+          contents <- readFile item
+          return $ Just contents
+      )
+    else return Nothing
+
+popItem :: StackDir -> IO (Maybe String)
+popItem path = do
+  contents <- peekItem path
+  let item = itemOf path
+  whenFileExists item $ do
+    removeFile item
   let nextItem = nextItemOf path
   whenFileExists nextItem $ do
     renameFile nextItem item
