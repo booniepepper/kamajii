@@ -31,10 +31,12 @@ stackAction ["head", rawN] stackDir = case parsedN of
   Just n -> headItems stackDir n
   Nothing -> return Nothing
   where parsedN = readMaybe rawN :: Maybe Int
--- TODO: Read actions.      list, tail, length, isempty
+-- TODO: Read actions.      list, tail N, length, isempty
 -- TODO: Lifecycle actions. complete[-all] delete[-all]
 -- TODO: Shuffle actions.   swap, rot, next (move first to last)
 stackAction _ _ = return (Just programUsage)
+
+-- TODO: These file manipulations could use more abstraction
 
 pushItem :: StackDir -> String -> IO ()
 pushItem path contents = do
