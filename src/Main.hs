@@ -1,22 +1,28 @@
 module Main where
 
-import Control.Monad ( forM_ )
+import Control.Monad (forM_)
+import Control.Monad.IO.Class (MonadIO)
 import Data.ByteString (ByteString)
-import Data.ByteString.Char8 (pack, snoc, unpack)
 import qualified Data.ByteString as B
-import Files ( getStackDir, pushItem, popItem )
+import Data.ByteString.Char8 (pack, snoc, unpack)
+import Files (getStackDir, popItem, pushItem)
 import Network.Simple.TCP
-    ( recv, send, serve, SockAddr, Socket, HostPreference(Host) )
+  ( HostPreference (Host),
+    SockAddr,
+    Socket,
+    recv,
+    send,
+    serve,
+  )
 import System.IO (isEOF)
-import Control.Monad.IO.Class ( MonadIO )
 
 programName :: ByteString
 programName = pack "kamajii 0.1"
 
 programUsage :: String
 programUsage =
-  "Usage: kamajii STACK push CONTENTS...\n" ++
-  "       kamajii STACK pop"
+  "Usage: kamajii STACK push CONTENTS...\n"
+    ++ "       kamajii STACK pop"
 
 main :: IO ()
 main = serve (Host "localhost") "3000" handleClient
@@ -49,14 +55,15 @@ clientLoop socket = do
     unless False io = io
 
 type Commands = [String]
+
 type StackDir = String
 
 handleCmd :: Commands -> IO (Maybe String)
-handleCmd (stack:cmd) = getStackDir stack >>= stackAction cmd
+handleCmd (stack : cmd) = getStackDir stack >>= stackAction cmd
 handleCmd _ = return (Just programUsage)
 
 stackAction :: Commands -> StackDir -> IO (Maybe String)
-stackAction ("push":contents) stackDir = pushItem stackDir (unwords contents) >> return Nothing
+stackAction ("push" : contents) stackDir = pushItem stackDir (unwords contents) >> return Nothing
 stackAction ["pop"] stackDir = popItem stackDir
 -- TODO: Read actions.      peek, head <n>, list, tail, length, isempty
 -- TODO: Lifecycle actions. complete[-all] delete[-all]
