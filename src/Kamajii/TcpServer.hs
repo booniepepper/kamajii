@@ -14,7 +14,6 @@ import Network.Simple.TCP
     serve,
   )
 import Kamajii.Stack (processStackCommand)
-import System.IO (isEOF)
 
 programName :: ByteString
 programName = pack Meta.programName
