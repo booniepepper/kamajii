@@ -1,7 +1,7 @@
 module Kamajii.Stack (processStackCommand) where
 
 import Control.Monad (when)
-import Kamajii.Meta (programUsage)
+import Kamajii.Meta (programUsage, headLimit, headLimitExceeded)
 import System.EasyFile
     ( createDirectoryIfMissing,
       doesDirectoryExist,
@@ -12,6 +12,8 @@ import System.EasyFile
       renameFile,
       getAppUserDataDirectory,
       joinPath )
+import Text.Read (readMaybe)
+import Data.List (intercalate)
 
 type Commands = [String]
 
@@ -25,7 +27,11 @@ stackAction :: Commands -> StackDir -> IO (Maybe String)
 stackAction ("push" : contents) stackDir = pushItem stackDir (unwords contents) >> return Nothing
 stackAction ["pop"] stackDir = popItem stackDir
 stackAction ["peek"] stackDir = peekItem stackDir
--- TODO: Read actions.      head <n>, list, tail, length, isempty
+stackAction ["head", rawN] stackDir = case parsedN of
+  Just n -> headItems stackDir n
+  Nothing -> return Nothing
+  where parsedN = readMaybe rawN :: Maybe Int
+-- TODO: Read actions.      list, tail, length, isempty
 -- TODO: Lifecycle actions. complete[-all] delete[-all]
 -- TODO: Shuffle actions.   swap, rot, next (move first to last)
 stackAction _ _ = return (Just programUsage)
@@ -79,6 +85,23 @@ popItem path = do
   when (nextDirExists && not nextItemStillExists) $ do
     removeDirectory nextDir
   return contents
+
+headItems :: StackDir -> Int -> IO (Maybe String)
+headItems path 0 = return Nothing
+headItems path n
+  | n < 0 = return Nothing
+  | n > headLimit = return $ Just headLimitExceeded
+  | otherwise = go path n []
+  where
+    go :: FilePath -> Int -> [String] -> IO (Maybe String)
+    go _ 0 acc = present acc
+    go path n acc = do
+      contents <- peekItem path
+      case contents of
+        Just s -> go (nextOf path) (n-1) (acc ++ [s])
+        Nothing -> present acc
+    present :: [String] -> IO (Maybe String)
+    present = return . Just . intercalate "\n"
 
 -- Stacky stuff
 
