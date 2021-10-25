@@ -20,14 +20,15 @@ type Commands = [String]
 
 type StackDir = String
 
+errorWithUsage :: IO (Maybe String)
+errorWithUsage = return . Just $ programUsage
+
 processStackCommand :: Commands -> IO (Maybe String)
 processStackCommand (stack : cmd) = getStackDir stack >>= stackAction cmd
-processStackCommand _ = return $ Just programUsage
+processStackCommand _ = errorWithUsage
 
 withInt :: String -> (Int -> IO (Maybe String)) -> IO (Maybe String)
-withInt rawN f = case readMaybe rawN of
-  Just n -> f n
-  Nothing -> return (Just programUsage)
+withInt rawN f = maybe errorWithUsage f (readMaybe rawN)
 
 stackAction :: Commands -> StackDir -> IO (Maybe String)
 stackAction ("push" : contents) stackDir = pushItem stackDir (unwords contents) >> return Nothing
@@ -42,7 +43,7 @@ stackAction ["length"] stackDir = return (Just "TODO: NOT YET IMPLEMENTED") -- T
 stackAction ["swap"] stackDir = return (Just "TODO: NOT YET IMPLEMENTED")
 stackAction ["rot"] stackDir = return (Just "TODO: NOT YET IMPLEMENTED")
 stackAction ["next"] stackDir = return (Just "TODO: NOT YET IMPLEMENTED")
-stackAction _ _ = return (Just programUsage)
+stackAction _ _ = errorWithUsage
 
 -- TODO: These file manipulations could use more abstraction
 
