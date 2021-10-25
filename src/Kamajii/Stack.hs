@@ -24,18 +24,24 @@ processStackCommand :: Commands -> IO (Maybe String)
 processStackCommand (stack : cmd) = getStackDir stack >>= stackAction cmd
 processStackCommand _ = return $ Just programUsage
 
+withInt :: String -> (Int -> IO (Maybe String)) -> IO (Maybe String)
+withInt rawN f = case readMaybe rawN of
+  Just n -> f n
+  Nothing -> return (Just programUsage)
+
 stackAction :: Commands -> StackDir -> IO (Maybe String)
 stackAction ("push" : contents) stackDir = pushItem stackDir (unwords contents) >> return Nothing
 stackAction ["pop"] stackDir = popItem stackDir
 stackAction ["peek"] stackDir = peekItem stackDir
-stackAction ["head", rawN] stackDir = case parsedN of
-  Just n -> listItems stackDir n
-  Nothing -> return Nothing
-  where parsedN = readMaybe rawN :: Maybe Int
+stackAction ["head", n] stackDir = withInt n $ listItems stackDir
 stackAction ["list"] stackDir = listAllItems stackDir
--- TODO: Read actions.      list, tail N, length, isempty
--- TODO: Lifecycle actions. complete[-all] delete[-all]
--- TODO: Shuffle actions.   swap, rot, next (move first to last)
+stackAction ["tail", rawN] stackDir = return (Just "TODO: NOT YET IMPLEMENTED")
+stackAction ["length"] stackDir = return (Just "TODO: NOT YET IMPLEMENTED") -- TODO: Keep counts on push/pop?
+-- TODO: Lifecycle actions. complete[-all] delete[-all] ... Or is this a Sigi idea only?
+-- TODO: More stack actions?
+stackAction ["swap"] stackDir = return (Just "TODO: NOT YET IMPLEMENTED")
+stackAction ["rot"] stackDir = return (Just "TODO: NOT YET IMPLEMENTED")
+stackAction ["next"] stackDir = return (Just "TODO: NOT YET IMPLEMENTED")
 stackAction _ _ = return (Just programUsage)
 
 -- TODO: These file manipulations could use more abstraction
