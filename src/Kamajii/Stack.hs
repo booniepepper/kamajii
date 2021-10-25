@@ -14,6 +14,7 @@ import System.EasyFile
       joinPath )
 import Text.Read (readMaybe)
 import Data.List (intercalate)
+import System.Posix.Internals (newFilePath)
 
 type Commands = [String]
 
@@ -28,9 +29,10 @@ stackAction ("push" : contents) stackDir = pushItem stackDir (unwords contents) 
 stackAction ["pop"] stackDir = popItem stackDir
 stackAction ["peek"] stackDir = peekItem stackDir
 stackAction ["head", rawN] stackDir = case parsedN of
-  Just n -> headItems stackDir n
+  Just n -> listItems stackDir n
   Nothing -> return Nothing
   where parsedN = readMaybe rawN :: Maybe Int
+stackAction ["list"] stackDir = listAllItems stackDir
 -- TODO: Read actions.      list, tail N, length, isempty
 -- TODO: Lifecycle actions. complete[-all] delete[-all]
 -- TODO: Shuffle actions.   swap, rot, next (move first to last)
@@ -88,9 +90,21 @@ popItem path = do
     removeDirectory nextDir
   return contents
 
-headItems :: StackDir -> Int -> IO (Maybe String)
-headItems path 0 = return Nothing
-headItems path n
+listAllItems :: StackDir -> IO (Maybe String)
+listAllItems path = go path []
+  where
+    go :: FilePath -> [String] -> IO (Maybe String)
+    go path acc = do
+      contents <- peekItem path
+      case contents of
+        Just s -> go (nextOf path) (acc ++ [s])
+        Nothing -> present acc
+    present :: [String] -> IO (Maybe String)
+    present = return . Just . intercalate "\n"
+
+listItems :: StackDir -> Int -> IO (Maybe String)
+listItems path 0 = return Nothing
+listItems path n
   | n < 0 = return Nothing
   | n > headLimit = return $ Just headLimitExceeded
   | otherwise = go path n []
