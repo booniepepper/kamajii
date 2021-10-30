@@ -18,4 +18,4 @@ executable kamajii
   main-is:             Main.hs
   other-modules:       Kamajii.Meta, Kamajii.TcpServer, Kamajii.Stack
   default-language:    Haskell2010
-  build-depends:       base >= 4.7 && < 5, bytestring == 0.10.12.0, easy-file == 0.2.2, network-simple == 0.4.5
+  build-depends:       base >= 4.7 && < 5, bytestring == 0.10.12.0, easy-file == 0.2.2, network-simple == 0.4.5, parallel == 3.2.2.0

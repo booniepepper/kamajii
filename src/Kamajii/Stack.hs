@@ -1,6 +1,7 @@
 module Kamajii.Stack (processStackCommand) where
 
 import Control.Monad (when)
+import Control.Seq (rdeepseq, seqList, using)
 import Kamajii.Meta (programUsage, headLimit, headLimitExceeded)
 import System.EasyFile
     ( createDirectoryIfMissing,
@@ -13,6 +14,7 @@ import System.EasyFile
       getAppUserDataDirectory,
       joinPath )
 import Text.Read (readMaybe)
+import Data.Char (toUpper)
 import Data.List (intercalate)
 import System.Posix.Internals (newFilePath)
 
@@ -28,17 +30,18 @@ processStackCommand ["help"] = return (Just programUsage)
 processStackCommand (stack : cmd) = getStackDir stack >>= stackAction cmd
 processStackCommand _ = parseError
 
-withInt :: String -> (Int -> IO (Maybe String)) -> IO (Maybe String)
-withInt rawN f = maybe parseError f (readMaybe rawN)
+parsingInt :: String -> (Int -> IO (Maybe String)) -> IO (Maybe String)
+parsingInt rawN f = maybe parseError f (readMaybe rawN)
 
 stackAction :: Commands -> StackDir -> IO (Maybe String)
 stackAction ("push" : contents) stackDir = pushItem stackDir (unwords contents) >> return Nothing
 stackAction ["pop"] stackDir = popItem stackDir
 stackAction ["peek"] stackDir = peekItem stackDir
-stackAction ["head", n] stackDir = withInt n $ listItems stackDir
+stackAction ["head", n] stackDir = parsingInt n $ listItems stackDir
 stackAction ["list"] stackDir = listAllItems stackDir
-stackAction ["tail", rawN] stackDir = return (Just "TODO: NOT YET IMPLEMENTED")
-stackAction ["length"] stackDir = return (Just "TODO: NOT YET IMPLEMENTED") -- TODO: Keep counts on push/pop?
+stackAction ["tail", n] stackDir = return (Just "TODO: NOT YET IMPLEMENTED")
+stackAction ["length"] stackDir = fmap (Just . show) (getLength stackDir)
+stackAction ["empty"] stackDir = fmap (Just . map toUpper . show . (== 0)) (getLength stackDir)
 -- TODO: Lifecycle actions. complete[-all] delete[-all] ... Or is this a Sigi idea only?
 -- TODO: More stack actions?
 stackAction ["swap"] stackDir = return (Just "TODO: NOT YET IMPLEMENTED")
@@ -47,6 +50,22 @@ stackAction ["next"] stackDir = return (Just "TODO: NOT YET IMPLEMENTED")
 stackAction _ _ = parseError
 
 -- TODO: These file manipulations could use more abstraction
+
+getLength :: StackDir -> IO Int
+getLength path = do
+  let countFile = countOf path
+  fileExists <- doesFileExist countFile
+  if fileExists
+    then fmap read (readFile countFile)
+    else return 0
+
+updateLength :: StackDir -> (Int -> Int) -> IO ()
+updateLength path f = do
+  let countFile = countOf path
+  count <- getLength path
+  let strictCount = count `using` rdeepseq -- force evaluation. TODO: This fails
+  let newCount = maximum [0, f strictCount] -- never go below 0 length
+  writeFile countFile $ show newCount
 
 pushItem :: StackDir -> String -> IO ()
 pushItem path contents = do
@@ -63,6 +82,7 @@ pushItem path contents = do
     makeDir nextDir
     renameFile item nextItem
   writeFile item contents
+  updateLength path succ
 
 peekItem :: StackDir -> IO (Maybe String)
 peekItem path = do
@@ -96,6 +116,7 @@ popItem path = do
   nextItemStillExists <- doesFileExist nextItem
   when (nextDirExists && not nextItemStillExists) $ do
     removeDirectory nextDir
+  updateLength path pred
   return contents
 
 listAllItems :: StackDir -> IO (Maybe String)
@@ -131,6 +152,9 @@ listItems path n
 
 itemOf :: FilePath -> FilePath
 itemOf = pathAppend "item"
+
+countOf :: FilePath -> FilePath
+countOf = pathAppend "count"
 
 nextOf :: FilePath -> FilePath
 nextOf = pathAppend "next"
