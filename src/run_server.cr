@@ -17,8 +17,9 @@ def handle_client(client : TCPSocket)
     stack = chars.skip(action.size + 1).take_while {|c| c != ' '}.join
 
     if action.size == 0
-      respond_idk_to client, "no action"
-      next
+      client.puts("ok bye")
+      client.close
+      return
     elsif stack.size == 0
       respond_idk_to client, "no stack"
       next
@@ -34,7 +35,7 @@ def handle_client(client : TCPSocket)
     when "peek"
       client.puts(Kamajii.peek stack)
     else
-      respond_idk_to client, "unknown action #{action}"
+      respond_idk_to client, "unknown action #{action.inspect}"
       next
     end
   end
